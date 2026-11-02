@@ -676,7 +676,14 @@ function applyMe(){
 /* ============ AUTH ============ */
 $('loginForm').addEventListener('submit', function(e){
   e.preventDefault(); $('lgErr').textContent='';
-  auth.signInWithEmailAndPassword($('lgEmail').value.trim(), $('lgPw').value).catch(function(err){
+  var lem=$('lgEmail').value.trim(), lpw=$('lgPw').value;
+  auth.signInWithEmailAndPassword(lem, lpw).catch(function(err){
+    /* 第一次使用：管理者信箱還沒有帳號時，用輸入的密碼直接建立 */
+    if(lem.toLowerCase()===SEED_ADMIN.email && (err.code==='auth/invalid-credential'||err.code==='auth/user-not-found') && lpw.length>=6){
+      return auth.createUserWithEmailAndPassword(lem, lpw).then(function(){ toast('管理者帳號已建立'); }).catch(function(e2){
+        $('lgErr').textContent = e2.code==='auth/email-already-in-use' ? '信箱或密碼不對' : ('建立失敗：'+e2.code);
+      });
+    }
     var m={'auth/invalid-credential':'信箱或密碼不對','auth/user-not-found':'信箱或密碼不對','auth/wrong-password':'信箱或密碼不對','auth/invalid-email':'信箱格式不對','auth/operation-not-allowed':'Firebase 還沒開啟 Email/Password 登入','auth/too-many-requests':'試太多次了，等一下再試'};
     $('lgErr').textContent=m[err.code]||('登入失敗：'+err.code);
   });
