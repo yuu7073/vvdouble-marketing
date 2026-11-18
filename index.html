@@ -475,7 +475,6 @@ function extraBtns(t){
   var h='';
   if(t.common) return h;
   h+='<button class="xb v'+(t.vhelp?' on':'')+'" data-act="vhelp" data-id="'+t.id+'" title="請 V 支援">V'+(t.vhelp?' '+t.vhelp:'')+'</button>';
-  if(isVideo(t)) h+='<button class="xb r'+(t.reject?' on':'')+'" data-act="reject" data-id="'+t.id+'" title="退件">退'+(t.reject?' '+t.reject:'')+'</button>';
   return h;
 }
 function itemHTML(t, opts){
@@ -483,7 +482,7 @@ function itemHTML(t, opts){
   var done=isDone(t), late=t.date<today()&&!done;
   var h='<div class="it'+(done?' done':'')+(late&&opts.late?' late':'')+(t.common?' cm':'')+'" style="'+(t.common?'':whoStyle(t.who))+'" data-id="'+t.id+'">';
   h+='<input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'>';
-  h+='<span class="t">'+(t.common?'<span class="lb">共同</span>':pfTag(t.platform))+leaveTag(t)+esc(t.text)+assistTag(t)+'</span>';
+  h+=leaveTag(t)+'<span class="t">'+(t.common?'<span class="lb">共同</span>':pfTag(t.platform))+esc(t.text)+assistTag(t)+'</span>';
   if(t.count && opts.counter){ h+='<span class="cnt"><button data-act="dec" data-id="'+t.id+'" aria-label="減一">−</button><b>'+(t.done||0)+' / '+t.count+'</b><button data-act="inc" data-id="'+t.id+'" aria-label="加一">+</button></span>'; }
   else h+=qTag(t);
   if(opts.btns) h+=extraBtns(t);
@@ -494,7 +493,7 @@ function itemHTML(t, opts){
 }
 function liHTML(t){
   var done=isDone(t), late=t.date<today()&&!done;
-  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+leaveTag(t)+esc(t.text)+assistTag(t)+'</span>'+qTag(t)+'</label>';
+  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+esc(t.text)+assistTag(t)+'</span>'+(t.leave?leaveTag(t):qTag(t))+'</label>';
 }
 
 /* ============ RENDER ============ */
@@ -613,7 +612,6 @@ function renderStatus(){
   h+=kpiRow('形象影片 每月 '+KPI.brandVideoPerMonth, sumKind('brandvideo',mFrom,mTo), KPI.brandVideoPerMonth);
   h+='<span class="g">本期 '+md(cyc[0])+' – '+md(cyc[1])+'</span>';
   h+='<span>V 支援</span><span class="v">'+countLog('vhelp',cyc[0],cyc[1])+' 次</span>';
-  h+='<span>影片退件</span><span class="v">'+countLog('reject',cyc[0],cyc[1])+' 支</span>';
   h+='</div></div>';
   /* 完成率 */
   h+='<div class="c"><div class="h"><b>完成率</b></div><table class="tbl"><tr><th></th><th>本週</th><th>本期</th><th>逾期</th></tr>';
@@ -851,7 +849,6 @@ function reportText(from,to){
   L.push('KOL 企劃影片 '+sumKind('kolvideo',from,to)+' / '+KPI.kolVideoPerWeek*2);
   L.push('其他影片 '+sumKind('othervideo',from,to)+' / '+KPI.otherVideoPerWeekMin*2+'–'+KPI.otherVideoPerWeekMax*2);
   L.push('形象影片 '+sumKind('brandvideo',from,to));
-  L.push('影片退件 '+countLog('reject',from,to)+' 支');
   L.push('V 支援 '+countLog('vhelp',from,to)+' 次');
   var und=tasks.filter(function(t){return t.date>=from&&t.date<=to&&!t.common&&!isDone(t);});
   L.push('未完成 '+und.length+' 件');
@@ -870,12 +867,10 @@ function openMeeting(period){
   h+='<tr><td>任務完成率</td>'+names.map(function(n){var s=statsFor(n,from,to);return '<td><b>'+s.p+'%</b> <span class="sm">'+s.d+'/'+s.n+'</span></td>';}).join('')+'<td></td></tr>';
   h+='</table></div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
-  var rj=logs.filter(function(l){return l.type==='reject'&&l.date>=from&&l.date<=to;}).sort(function(a,b){return a.date<b.date?-1:1;});
-  h+='<div class="c"><div class="h"><b>影片退件</b><span>'+rj.length+' 支</span></div>'+(rj.length?rj.map(function(l){return '<div class="lt"><span class="d">'+md(l.date)+'</span><span class="who" style="color:'+personColor(l.who)+'">'+esc(l.who)+'</span><span class="t">'+esc(l.text)+'</span></div>';}).join(''):'<div class="empty">無</div>')+'</div>';
   var vh=logs.filter(function(l){return l.type==='vhelp'&&l.date>=from&&l.date<=to;}).sort(function(a,b){return a.date<b.date?-1:1;});
   h+='<div class="c"><div class="h"><b>V 支援</b><span>'+vh.length+' 次</span></div>'+(vh.length?vh.map(function(l){return '<div class="lt" style="background:#F3F6FF;border-color:#D6E0FF"><span class="d" style="color:var(--blue)">'+md(l.date)+'</span><span class="who" style="color:'+personColor(l.who)+'">'+esc(l.who)+'</span><span class="t">'+esc(l.text)+'</span></div>';}).join(''):'<div class="empty">無</div>');
   var und=tasks.filter(function(t){return t.date>=from&&t.date<=to&&!t.common&&!isDone(t);}).sort(function(a,b){return a.date<b.date?-1:1;});
-  h+='<div class="h" style="margin-top:12px"><b>未完成</b><span>'+und.length+' 件</span></div>';
+  h+='</div><div class="c"><div class="h"><b>未完成</b><span>'+und.length+' 件</span></div>';
   und.slice(0,20).forEach(function(t){ h+=itemHTML(t,{showWho:true,showDate:true,late:true}); });
   if(und.length>20) h+='<div class="empty">+'+(und.length-20)+'</div>';
   if(und.length && isAdmin()) h+='<div style="margin-top:10px"><button class="btn" data-act="roll-undone" data-to="'+to+'">未完成移到今天</button></div>';
@@ -922,7 +917,6 @@ document.addEventListener('click', function(e){
   if(act==='toggle'){ var t=tasks.find(function(x){return x.id===id;}); if(!t) return; var ck=el.checked; var upd=t.count?{done:ck?t.count:0}:{doneFlag:ck}; upd.doneAt=ck?Date.now():null; upd.doneBy=ck?me.name:null; db.collection(COL.tasks).doc(id).update(upd); return; }
   if(act==='inc'||act==='dec'){ var t2=tasks.find(function(x){return x.id===id;}); if(!t2) return; var v=Math.max(0,Math.min(t2.count,(t2.done||0)+(act==='inc'?1:-1))); db.collection(COL.tasks).doc(id).update({done:v,doneAt:v>=t2.count?Date.now():null,doneBy:me.name}); return; }
   if(act==='vhelp'){ var t3=tasks.find(function(x){return x.id===id;}); if(!t3) return; db.collection(COL.tasks).doc(id).update({vhelp:(t3.vhelp||0)+1}); logEvent('vhelp',t3); toast('已記錄 V 支援'); return; }
-  if(act==='reject'){ var t4=tasks.find(function(x){return x.id===id;}); if(!t4) return; db.collection(COL.tasks).doc(id).update({reject:(t4.reject||0)+1}); logEvent('reject',t4); toast('已記錄退件'); return; }
   if(act==='plan-save'){ el.textContent='儲存中'; savePlan(el.dataset.date,el.dataset.who).then(function(){ toast('已儲存'); renderPlan(); }).catch(function(){ el.textContent='儲存'; }); return; }
   if(act==='plan-save-all'){ var ps=[]; var names=staffNames(); for(var i=0;i<7;i++){ names.forEach(function(nm){ var ds=ymd(addDays(weekStart,i)); if(dirty[planKey(ds,nm)]!=null) ps.push(savePlan(ds,nm)); }); } if(!ps.length){ toast('沒有變更'); return; } Promise.all(ps).then(function(){ toast('已儲存'); renderPlan(); }).catch(function(){}); return; }
   if(act==='meeting'){ e.preventDefault(); openMeeting(); return; }
