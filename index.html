@@ -610,8 +610,7 @@ function renderStatus(){
   h+=kpiRow('一覽快剪 每週 1–2', sumKind('overview',ws,we), KPI.overviewPerWeekMin, KPI.overviewPerWeekMax);
   h+=kpiRow('其他影片 每週 1–2', sumKind('othervideo',ws,we), KPI.otherVideoPerWeekMin, KPI.otherVideoPerWeekMax);
   h+=kpiRow('形象影片 每月 '+KPI.brandVideoPerMonth, sumKind('brandvideo',mFrom,mTo), KPI.brandVideoPerMonth);
-  h+='<span class="g">本期 '+md(cyc[0])+' – '+md(cyc[1])+'</span>';
-  h+='<span>V 支援</span><span class="v">'+countLog('vhelp',cyc[0],cyc[1])+' 次</span>';
+  if(isAdmin()){ h+='<span class="g">本期 '+md(cyc[0])+' – '+md(cyc[1])+'</span>'; h+='<span>V 支援</span><span class="v">'+countLog('vhelp',cyc[0],cyc[1])+' 次</span>'; }
   h+='</div></div>';
   /* 完成率 */
   h+='<div class="c"><div class="h"><b>完成率</b></div><table class="tbl"><tr><th></th><th>本週</th><th>本期</th><th>逾期</th></tr>';
@@ -627,7 +626,7 @@ function renderStatus(){
   var next=cycleOf(td)[1]; var nextMeet=addDaysS(next,1);
   var nws=ymd(addDays(weekStart,7)), nwe=ymd(addDays(weekStart,13));
   var nt=tasks.filter(function(t){return t.date>=nws&&t.date<=nwe&&!t.common;}).length;
-  h+='<div class="c"><div class="h"><b>下次會議</b><span>兩週一次</span></div><div style="font-size:12px;color:#6A7085;line-height:1.7">'+md(nextMeet)+' 週'+wdOf(nextMeet)+' 排 '+md(nextMeet)+' – '+md(addDaysS(nextMeet,13))+'<br>'+md(nextMeet)+' 兩週檢視 · <a href="#" data-act="meeting">報表</a><br>下週 '+(nt?'已排 '+nt+' 件':'尚未排程')+' · <a href="#" data-act="go-plan-next">排程</a></div></div>';
+  h+='<div class="c"><div class="h"><b>下次會議</b><span>兩週一次</span></div><div style="font-size:12px;color:#6A7085;line-height:1.7">'+md(nextMeet)+' 週'+wdOf(nextMeet)+' 排 '+md(nextMeet)+' – '+md(addDaysS(nextMeet,13))+'<br>'+(isAdmin()?md(nextMeet)+' 兩週檢視 · <a href="#" data-act="meeting">報表</a><br>':'')+'下週 '+(nt?'已排 '+nt+' 件':'尚未排程')+' · <a href="#" data-act="go-plan-next">排程</a></div></div>';
   /* 請假 */
   var up=leaves.filter(function(l){return l.to>=td;}).sort(function(a,b){return a.from<b.from?-1:1;});
   if(up.length){ h+='<div class="c"><div class="h"><b>請假</b></div>'; up.forEach(function(l){ var pend=pendingLeaveTasks(l).length; h+='<div style="font-size:12px;line-height:1.8"><span class="who" style="color:'+personColor(l.name)+';font-size:11px">'+esc(l.name)+'</span> '+md(l.from)+' – '+md(l.to)+(l.reason?' · '+esc(l.reason):'')+(pend?' <span style="color:var(--red);font-weight:700">待分配 '+pend+'</span>':'')+'</div>'; }); h+='</div>'; }
@@ -916,10 +915,10 @@ document.addEventListener('click', function(e){
   if(act==='logout'){ auth.signOut(); return; }
   if(act==='toggle'){ var t=tasks.find(function(x){return x.id===id;}); if(!t) return; var ck=el.checked; var upd=t.count?{done:ck?t.count:0}:{doneFlag:ck}; upd.doneAt=ck?Date.now():null; upd.doneBy=ck?me.name:null; db.collection(COL.tasks).doc(id).update(upd); return; }
   if(act==='inc'||act==='dec'){ var t2=tasks.find(function(x){return x.id===id;}); if(!t2) return; var v=Math.max(0,Math.min(t2.count,(t2.done||0)+(act==='inc'?1:-1))); db.collection(COL.tasks).doc(id).update({done:v,doneAt:v>=t2.count?Date.now():null,doneBy:me.name}); return; }
-  if(act==='vhelp'){ var t3=tasks.find(function(x){return x.id===id;}); if(!t3) return; db.collection(COL.tasks).doc(id).update({vhelp:(t3.vhelp||0)+1}); logEvent('vhelp',t3); toast('已記錄 V 支援'); return; }
+  if(act==='vhelp'){ var t3=tasks.find(function(x){return x.id===id;}); if(!t3) return; db.collection(COL.tasks).doc(id).update({vhelp:(t3.vhelp||0)+1}); logEvent('vhelp',t3); toast('已通知 V'); return; }
   if(act==='plan-save'){ el.textContent='儲存中'; savePlan(el.dataset.date,el.dataset.who).then(function(){ toast('已儲存'); renderPlan(); }).catch(function(){ el.textContent='儲存'; }); return; }
   if(act==='plan-save-all'){ var ps=[]; var names=staffNames(); for(var i=0;i<7;i++){ names.forEach(function(nm){ var ds=ymd(addDays(weekStart,i)); if(dirty[planKey(ds,nm)]!=null) ps.push(savePlan(ds,nm)); }); } if(!ps.length){ toast('沒有變更'); return; } Promise.all(ps).then(function(){ toast('已儲存'); renderPlan(); }).catch(function(){}); return; }
-  if(act==='meeting'){ e.preventDefault(); openMeeting(); return; }
+  if(act==='meeting'){ e.preventDefault(); if(!isAdmin()) return; openMeeting(); return; }
   if(act==='meet-prev'){ openMeeting(cycleOf(addDaysS(el.dataset.from,-14))); return; }
   if(act==='meet-next'){ openMeeting(cycleOf(addDaysS(el.dataset.from,14))); return; }
   if(act==='meet-copy'){ var txt=reportText(el.dataset.from,el.dataset.to); if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){toast('已複製');}); else { prompt('複製', txt); } return; }
@@ -1005,6 +1004,7 @@ function listen(){
 function applyMe(){
   $('meChip').textContent=me.name; $('meChip').style.background=me.color||'#2F6FED';
   $('tabSettings').classList.toggle('hide',!isAdmin());
+  $('btnMeeting').classList.toggle('hide',!isAdmin());
 }
 
 /* ============ AUTH ============ */
