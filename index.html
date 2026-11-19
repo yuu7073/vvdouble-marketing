@@ -38,6 +38,25 @@ svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .chip{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--bd2);background:var(--sf);color:#4B5162;cursor:pointer}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .me{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;color:#fff}
+.igc{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.igc .c{padding:10px 14px}
+.igc .k{font-size:11px;color:var(--tx3)}
+.igc .n{font-size:22px;font-weight:700;line-height:1.3}
+.igc .d{font-size:10px;color:var(--tx3)}
+.igc .d.up{color:var(--green)}.igc .d.dn{color:var(--red)}
+.igt{width:100%;border-collapse:collapse;font-size:12px}
+.igt th{font-size:10px;color:var(--tx3);font-weight:500;text-align:right;padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--sf)}
+.igt th.on{color:var(--tx);font-weight:700}
+.igt th.l,.igt td.l{text-align:left}
+.igt td{padding:6px 8px;border-bottom:1px solid #F0F2F5;text-align:right;white-space:nowrap}
+.igt tr.r{cursor:pointer}.igt tr.r:hover td{background:#FAFBFC}
+.igt tr.hi td{background:#F0FAF4}.igt tr.lo td{background:#FFF6F6}
+.igt .th{width:34px;height:42px;border-radius:5px;object-fit:cover;background:#ECEEF3;display:block}
+.igt .cap{max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.kd{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:#ECEEF3;color:#4B5162}
+.kd.story{background:#FFF1D6;color:#B06A00}.kd.reel{background:#F1EBFF;color:#6B46D6}.kd.post{background:#E6EEFF;color:#2F6FED}
+.igbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.igbar input[type=date]{padding:5px 8px;border:1px solid var(--bd2);border-radius:8px;font-size:12px}
 .lnk{position:absolute;top:44px;right:120px;background:var(--sf);border:1px solid var(--bd2);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.14);z-index:40;min-width:200px}
 .lnk a{display:block;padding:8px 12px;border-radius:8px;color:var(--tx);text-decoration:none;font-size:13px}
 .lnk a:hover{background:var(--bg)}
@@ -300,6 +319,7 @@ svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke
     <button class="tab" data-view="cal">行事曆</button>
     <button class="tab" data-view="plan">排程</button>
     <button class="tab" data-view="kol">KOL</button>
+    <button class="tab" data-view="ig">成效</button>
     <button class="tab hide" data-view="settings" id="tabSettings">設定</button>
     <div class="sep dsk"></div>
     <button class="btn dsk" data-act="wk-prev" aria-label="上一週">‹</button>
@@ -327,6 +347,7 @@ svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke
     <div id="vCal" class="hide"></div>
     <div id="vPlan" class="hide"></div>
     <div id="vKol" class="hide"></div>
+    <div id="vIg" class="hide"></div>
     <div id="vSettings" class="hide"></div>
   </div>
 
@@ -380,6 +401,9 @@ var KPI = { storyWeekday:10, storyWeekend:5, fbPerDay:3, knowledgePerWeek:2, qui
 var DEMO = {"tasks":[{"date":"2026-11-16","line":"IG GA開箱影片 雯雯","text":"GA開箱影片 雯雯","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"IG GA開箱影片 泡芙","text":"GA開箱影片 泡芙","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"IG GA BS正片 20:00","text":"GA BS正片","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"20:00","order":3,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"FB 20:00 新品單品介紹發文","text":"新品單品介紹發文","platform":"FB","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"IG 新品限動*10","text":"新品限動","platform":"IG","who":"家榛","assist":null,"cat":1,"count":10,"time":"","order":4,"common":false,"imported":true,"createdBy":"排程表","done":10,"doneFlag":false},{"date":"2026-11-16","line":"上架 新品上架 7點前完成","text":"新品上架 7點前完成","platform":"其他","who":"小逸","assist":null,"cat":2,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"KOL 公關品清單+商品 double check","text":"KOL 公關品清單+商品 double check","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"","order":3,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"KOL 其他KOL合作待辦","text":"KOL 其他KOL合作待辦","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"","order":4,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-16","line":"請託 整理會議室","text":"整理會議室","platform":"其他","who":"小逸","assist":null,"cat":5,"count":null,"time":"","order":5,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-17","line":"IG 3人穿搭Reels","text":"3人穿搭Reels","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-17","line":"FB 12:00 貼文發布","text":"貼文發布","platform":"FB","who":"小逸","assist":null,"cat":3,"count":null,"time":"12:00","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-17","line":"IG 妞妞合作貼文","text":"妞妞合作貼文","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-17","line":"IG 姿姿貼文發布","text":"姿姿貼文發布","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":3,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-17","line":"IG 限動*5","text":"限動","platform":"IG","who":"家榛","assist":null,"cat":1,"count":5,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":5,"doneFlag":false},{"date":"2026-11-18","line":"IG 知識型貼文 20:00","text":"知識型貼文","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"IG 亮亮穿搭合作貼文","text":"亮亮穿搭合作貼文","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"IG 雯雯11/3新品Reels","text":"雯雯11/3新品Reels","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"上架 門市陳列快剪 新一中","text":"門市陳列快剪 新一中","platform":"其他","who":"家榛","assist":null,"cat":2,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"FB 20:00 新品單品介紹發文","text":"新品單品介紹發文","platform":"FB","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":3,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"IG 限動*5","text":"限動","platform":"IG","who":"家榛","assist":null,"cat":1,"count":5,"time":"","order":3,"common":false,"imported":true,"createdBy":"排程表","done":5,"doneFlag":false},{"date":"2026-11-18","line":"IG 限動*10 上午5/下午5","text":"限動 上午5/下午5","platform":"IG","who":"小逸","assist":null,"cat":1,"count":10,"time":"","order":4,"common":false,"imported":true,"createdBy":"排程表","done":10,"doneFlag":false},{"date":"2026-11-18","line":"KOL 上午提醒倉庫寄艾莉+芳妮公關品","text":"KOL 上午提醒倉庫寄艾莉+芳妮公關品","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"","order":5,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":true},{"date":"2026-11-18","line":"KOL 寄一份小卡給亮亮 下午","text":"KOL 寄一份小卡給亮亮","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"下午","order":6,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"KOL 確認奔奔小姐員購品項","text":"KOL 確認奔奔小姐員購品項","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"","order":7,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"KOL 小愛影片+文案審閱 下午","text":"KOL 小愛影片+文案審閱","platform":"其他","who":"小逸","assist":null,"cat":3,"count":null,"time":"下午","order":8,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"IG 製作知識型貼文內容","text":"製作知識型貼文內容","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":9,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"KOL 聯名KOL拍攝合作 亮亮11/18 小愛11/20","text":"KOL 聯名KOL拍攝合作 亮亮11/18 小愛11/20","platform":"其他","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":10,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"KOL 10月KOL合作貼文狀況 雯雯11/18發布","text":"KOL 10月KOL合作貼文狀況 雯雯11/18發布","platform":"其他","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":11,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"請託 12/15 12/29 拍攝企劃","text":"12/15 12/29 拍攝企劃","platform":"其他","who":"小逸","assist":null,"cat":5,"count":null,"time":"","order":12,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"請託 黑色星期五活動","text":"黑色星期五活動","platform":"其他","who":"小逸","assist":null,"cat":5,"count":null,"time":"","order":13,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-18","line":"KOL 11月員購 寄送+計算金額","text":"KOL 11月員購 寄送+計算金額","platform":"其他","who":"小逸","assist":null,"cat":4,"count":null,"time":"","order":14,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-19","line":"IG Reels影片","text":"Reels影片","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-19","line":"FB 20:00 新品單品介紹發文","text":"新品單品介紹發文","platform":"FB","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-19","line":"KOL 小愛探店預定時間 高雄門市 11/17-19拍攝 20上片","text":"KOL 小愛探店預定時間 高雄門市 11/17-19拍攝 20上片","platform":"其他","who":"小逸","assist":null,"cat":3,"count":null,"time":"","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-20","line":"IG 小愛探店影片 發布","text":"小愛探店影片 發布","platform":"IG","who":"家榛","assist":null,"cat":3,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-20","line":"IG 知識型貼文 20:00","text":"知識型貼文","platform":"IG","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-20","line":"FB 20:00 新品單品介紹發文","text":"新品單品介紹發文","platform":"FB","who":"小逸","assist":null,"cat":3,"count":null,"time":"20:00","order":2,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false},{"date":"2026-11-24","line":"黑色星期五活動預備","text":"黑色星期五活動預備","platform":"其他","who":"小逸","assist":null,"cat":5,"count":null,"time":"","order":1,"common":false,"imported":true,"createdBy":"排程表","done":0,"doneFlag":false}],"events":[{"date":"2026-11-16","title":"新品直播","kind":"live"},{"date":"2026-11-17","title":"GA 上架","kind":"launch"},{"date":"2026-11-27","title":"黑五活動","kind":"other"},{"date":"2026-11-30","title":"新品直播","kind":"live"},{"date":"2026-12-01","title":"新品上架","kind":"launch"},{"date":"2026-12-14","title":"新品直播","kind":"live"},{"date":"2026-12-15","title":"食菇上架","kind":"launch"},{"date":"2026-12-28","title":"新品直播","kind":"live"},{"date":"2026-12-29","title":"新品上架","kind":"launch"}],"leaves":[{"name":"家榛","from":"2026-12-16","to":"2026-12-21","reason":"出國"}],"notes":[],"kols":[{"name":"GAGA","item":"聯名穿搭貼文 · 主責 小逸","fee":"4500","steps":{"sent":true,"received":true,"photo":true,"posted":true}},{"name":"泡芙","item":"Reels · 主責 家榛","fee":"6000","steps":{"sent":true,"received":true,"photo":false,"posted":false}},{"name":"雯雯","item":"Reels 11/18 發布 · 主責 家榛","fee":"6000","steps":{"sent":true,"received":true,"photo":true,"posted":true}},{"name":"小愛","item":"探店影片 11/20 · 主責 小逸","fee":"3000","steps":{"sent":true,"received":true,"photo":false,"posted":false}},{"name":"亮亮","item":"穿搭貼文 · 主責 小逸","fee":"5000","steps":{"sent":true,"received":true,"photo":true,"posted":true}}]};
 var DEFAULT_LINKS = [ {name:'行銷排程表', url:'https://docs.google.com/spreadsheets/d/1vrsXPERq4ppkHmlhdwU3IHKc6WZrgN9Kc8H97mvVQAs/edit?gid=3000#gid=3000'}, {name:'FB 貼文', url:'https://yuu7073.github.io/vvdouble-fbpost/'}, {name:'WebP 轉 JPG', url:'https://yuu7073.github.io/vvdouble-webp2jpg/'}, {name:'文案工具', url:'https://yuu7073.github.io/write/'} ];
 var links = DEFAULT_LINKS.slice();
+var IG_FN = 'https://asia-east1-vvdouble-shopline.cloudfunctions.net/igwall';
+var ig = { items:[], days:{}, log:null, loaded:false, loading:false, err:'' };
+var igPeriod = 'week', igFrom = '', igTo = '', igType = 'all', igSort = { k:'ts', dir:-1 };
 var REMINDERS = [ {day:5, text:'KOL 費用、帳號、勞報單 交文馨', key:'kolfee'}, {day:30, text:'勞報單資料 交文馨', key:'labor'} ];
 
 /* ============ STATE ============ */
@@ -526,7 +550,7 @@ function renderAll(){
   else if(ae && (ae.tagName==='TEXTAREA' || (ae.tagName==='INPUT' && ae.type!=='checkbox')) && $('app').contains(ae)){ renderPending=true; return; }
   renderPending=false;
   $('wkLabel').textContent=md(ymd(weekStart))+' – '+md(ymd(addDays(weekStart,6)));
-  renderFilter(); renderLinks(); renderCountdown(); renderToday(); renderWeek(); renderStatus(); renderNotes(); renderCal(); renderPlan(); renderKol(); renderSettings();
+  renderFilter(); renderLinks(); renderCountdown(); renderToday(); renderWeek(); renderStatus(); renderNotes(); renderCal(); renderPlan(); renderKol(); renderIg(); renderSettings();
   $('noteCount').textContent=notes.filter(function(n){return !n.archived;}).length;
   if(qaVal!=null && $('qaInput')){ $('qaInput').value=qaVal; $('qaInput').focus(); }
 }
@@ -627,6 +651,7 @@ function renderStatus(){
   h+='<div class="c"><div class="h"><b>KPI</b><span>本週 '+md(ws)+' – '+md(we)+'</span></div><div class="kp">';
   h+='<span class="g">限動 · 今天</span>';
   names.forEach(function(nm){ var v=sumKind('story',td,td,nm), tg=storyTarget(td,td,nm); h+='<span><span class="who" style="color:'+personColor(nm)+';font-size:11px">'+esc(nm)+'</span></span><span class="v'+(tg?(v>=tg?' ok':(v<tg*0.6?' ng':'')):'')+'">'+v+' / '+tg+'</span>'; });
+  if(ig.loaded){ var igN=igIn(td,td,'story').length, igT=names.reduce(function(a,nm){return a+storyTarget(td,td,nm);},0); h+='<span>IG 實際發出</span><span class="v'+(igT?(igN>=igT?' ok':(igN<igT*0.6?' ng':'')):'')+'">'+igN+(igT?' / '+igT:'')+'</span>'; }
   h+='<span class="g">貼文 · 本週</span>';
   h+=kpiRow('FB 貼文 每天 '+KPI.fbPerDay, sumKind('fbpost',ws,we), KPI.fbPerDay*7);
   h+=kpiRow('IG 知識型 每週 '+KPI.knowledgePerWeek, sumKind('knowledge',ws,we), KPI.knowledgePerWeek);
@@ -801,6 +826,100 @@ function fillComposer(){
   $('cmpTo').innerHTML=to;
   var d='<option value="">不指定日期</option>'; for(var i=0;i<14;i++){ var ds=ymd(addDays(mondayOf(new Date()),i)); d+='<option value="'+ds+'">'+(ds===today()?'今天':md(ds)+' 週'+WD[i%7])+'</option>'; }
   $('cmpDate').innerHTML=d;
+}
+
+/* ============ IG 成效 ============ */
+function loadIg(refresh){
+  if(!auth.currentUser || ig.loading) return;
+  ig.loading=true; if(view==='ig') renderIg();
+  auth.currentUser.getIdToken().then(function(tok){
+    return fetch(IG_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({action:'insights',days:100,refresh:!!refresh})});
+  }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||('HTTP '+r.status)); return j; }); })
+  .then(function(j){ ig.items=j.items||[]; ig.days=j.days||{}; ig.log=j.log||null; ig.loaded=true; ig.err=''; })
+  .catch(function(e){ ig.err=e.message||String(e); })
+  .then(function(){ ig.loading=false; renderIg(); renderStatus(); });
+}
+function igRange(){
+  var td=today(), mon=ymd(mondayOf(new Date()));
+  if(igPeriod==='today') return [td,td];
+  if(igPeriod==='week') return [mon, addDaysS(mon,6)];
+  if(igPeriod==='lastweek') return [addDaysS(mon,-7), addDaysS(mon,-1)];
+  if(igPeriod==='month'){ var d=new Date(); return [ymd(new Date(d.getFullYear(),d.getMonth(),1)), ymd(new Date(d.getFullYear(),d.getMonth()+1,0))]; }
+  var f=igFrom||mon, t=igTo||td; if(t<f){ var x=f; f=t; t=x; } return [f,t];
+}
+function igIn(from,to,kind){ return ig.items.filter(function(m){ return m.day>=from && m.day<=to && (!kind || (kind==='content'?m.kind!=='story':m.kind===kind)); }); }
+function igSum(list,k){ return list.reduce(function(a,m){ return a+(+m[k]||0); },0); }
+function fmt(n){ return (Math.round(n)||0).toLocaleString('en-US'); }
+function igStats(from,to){
+  var st=igIn(from,to,'story'), ct=igIn(from,to,'content');
+  return { sN:st.length, sViews:igSum(st,'views'), sReach:st.length?igSum(st,'reach')/st.length:0, cN:ct.length, cViews:igSum(ct,'views'), cInter:igSum(ct,'inter') };
+}
+function igCard(label,val,prev,sub){
+  var d='';
+  if(prev!=null && prev>0){ var pc=Math.round((val-prev)/prev*100); d='<div class="d '+(pc>0?'up':(pc<0?'dn':''))+'">'+(pc>0?'+':'')+pc+'% 對上一期</div>'; }
+  else if(sub) d='<div class="d">'+sub+'</div>';
+  return '<div class="c"><div class="k">'+label+'</div><div class="n">'+fmt(val)+'</div>'+d+'</div>';
+}
+function igTrend(from,to){
+  var days=[]; for(var d=from; d<=to && days.length<62; d=addDaysS(d,1)) days.push(d);
+  if(days.length<2) return '';
+  var vals=days.map(function(d){ var l=igIn(d,d,'story'); return l.length?igSum(l,'reach')/l.length:null; });
+  var has=vals.filter(function(v){return v!=null;}); if(has.length<2) return '';
+  var mx=Math.max.apply(null,has)*1.15||1, W=1000,H=150,L=40,R=34,T=14,B=24;
+  var x=function(i){ return L+(W-L-R)*i/(days.length-1); }, y=function(v){ return T+(H-T-B)*(1-v/mx); };
+  var pts=[], dots='';
+  vals.forEach(function(v,i){ if(v==null) return; pts.push(x(i).toFixed(1)+','+y(v).toFixed(1)); dots+='<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3" fill="#1F2430"/><text x="'+x(i).toFixed(1)+'" y="'+(y(v)-7).toFixed(1)+'" font-size="10" text-anchor="middle" fill="#6A7085">'+fmt(v)+'</text>'; });
+  var ax='', ev='';
+  var step=Math.ceil(days.length/14);
+  days.forEach(function(d,i){ if(i%step===0||i===days.length-1) ax+='<text x="'+x(i).toFixed(1)+'" y="'+(H-6)+'" font-size="10" text-anchor="middle" fill="#8A90A0">'+md(d)+'</text>'; });
+  events.forEach(function(e){ var i=days.indexOf(e.date); if(i<0) return; ev+='<line x1="'+x(i).toFixed(1)+'" y1="'+T+'" x2="'+x(i).toFixed(1)+'" y2="'+(H-B)+'" stroke="#B06A00" stroke-dasharray="3 3"/><text x="'+(x(i)+4).toFixed(1)+'" y="'+(T+9)+'" font-size="9" fill="#B06A00">'+esc(e.title)+'</text>'; });
+  return '<div class="c" style="margin-bottom:12px"><div class="h"><b>限動平均每則觸及</b><span>每日</span></div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block"><line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#E3E6EC"/>'+ev+'<polyline points="'+pts.join(' ')+'" fill="none" stroke="#1F2430" stroke-width="2"/>'+dots+ax+'</svg></div>';
+}
+var IG_COLS=[['ts','時間','l'],['kind','類型','l'],['caption','文字','l'],['views','瀏覽'],['reach','觸及'],['inter','互動'],['likes','按讚'],['comments','留言'],['shares','分享'],['saved','儲存'],['replies','回覆']];
+function igRows(from,to){
+  var list=igIn(from,to, igType==='all'?null:igType);
+  var k=igSort.k, dir=igSort.dir;
+  list.sort(function(a,b){ var x=a[k], y=b[k]; if(k==='kind'||k==='caption'){ x=String(x||''); y=String(y||''); return x<y?-dir:(x>y?dir:0); } return ((+x||0)-(+y||0))*dir; });
+  return list;
+}
+function renderIg(){
+  if(view!=='ig') return;
+  var r=igRange(), from=r[0], to=r[1], len=daysBetween(from,to)+1;
+  var pf=addDaysS(from,-len), pt=addDaysS(from,-1);
+  var a=igStats(from,to), b=igStats(pf,pt);
+  var kinds={story:'限動',reel:'Reels',post:'貼文'};
+  var h='<div class="igbar">';
+  h+='<div class="seg">'+[['today','今天'],['week','本週'],['lastweek','上週'],['month','本月'],['custom','自訂']].map(function(p){ return '<button class="'+(igPeriod===p[0]?'on':'')+'" data-act="ig-period" data-p="'+p[0]+'">'+p[1]+'</button>'; }).join('')+'</div>';
+  if(igPeriod==='custom') h+='<input type="date" id="igFrom" value="'+esc(from)+'"><span style="color:#8A90A0">–</span><input type="date" id="igTo" value="'+esc(to)+'">';
+  else h+='<span style="font-size:12px;color:#6A7085">'+md(from)+(from!==to?' – '+md(to):'')+'</span>';
+  h+='<span style="margin-left:auto;font-size:11px;color:#8A90A0">'+(ig.loading?'更新中':(ig.log&&ig.log.at?'更新 '+md(ymd(new Date(ig.log.at)))+' '+pad(new Date(ig.log.at).getHours())+':'+pad(new Date(ig.log.at).getMinutes()):''))+'</span>';
+  if(isAdmin()) h+='<button class="btn sm" data-act="ig-refresh">立即更新</button><button class="btn sm" data-act="ig-export">匯出</button>';
+  h+='</div>';
+  if(ig.err) h+='<div class="c" style="margin-bottom:12px;color:var(--red);font-size:12px">'+esc(ig.err)+'</div>';
+  var dk=Object.keys(ig.days).filter(function(d){return d<=to && ig.days[d].followers;}).sort(), fol=dk.length?ig.days[dk[dk.length-1]].followers:0;
+  var dk0=Object.keys(ig.days).filter(function(d){return d<from && ig.days[d].followers;}).sort(), fol0=dk0.length?ig.days[dk0[dk0.length-1]].followers:0;
+  h+='<div class="igc">'+igCard('限動則數',a.sN,b.sN)+igCard('限動總瀏覽',a.sViews,b.sViews)+igCard('限動平均每則觸及',a.sReach,b.sReach)+igCard('貼文 · Reels 篇數',a.cN,b.cN)+igCard('貼文 · Reels 瀏覽',a.cViews,b.cViews)+igCard('貼文 · Reels 互動',a.cInter,b.cInter)+(fol?igCard('粉絲數',fol,null,fol0?((fol-fol0>=0?'+':'')+fmt(fol-fol0)+' 本期'):''):'')+'</div>';
+  h+=igTrend(from,to);
+  var rows=igRows(from,to);
+  var avg={}; ['story','reel','post'].forEach(function(kd){ var l=igIn(from,to,kd); avg[kd]=l.length>=4?igSum(l,'reach')/l.length:0; });
+  h+='<div class="c"><div class="igbar" style="margin-bottom:8px"><div class="seg">'+[['all','全部'],['story','限動'],['post','貼文'],['reel','Reels']].map(function(p){ return '<button class="'+(igType===p[0]?'on':'')+'" data-act="ig-type" data-p="'+p[0]+'">'+p[1]+'</button>'; }).join('')+'</div><span style="font-size:11px;color:#8A90A0">'+rows.length+' 則</span></div>';
+  h+='<div style="overflow:auto;max-height:70vh"><table class="igt"><tr><th class="l" style="cursor:default"></th>'+IG_COLS.map(function(c){ return '<th class="'+(c[2]||'')+(igSort.k===c[0]?' on':'')+'" data-act="ig-sort" data-k="'+c[0]+'">'+c[1]+(igSort.k===c[0]?(igSort.dir<0?' ↓':' ↑'):'')+'</th>'; }).join('')+'</tr>';
+  if(!rows.length) h+='<tr><td colspan="12" class="l" style="color:#B0B5C2;padding:16px 8px">'+(ig.loaded?'無資料':'載入中')+'</td></tr>';
+  rows.forEach(function(m){
+    var av=avg[m.kind], cls=av?(m.reach>av*1.5?' hi':(m.reach<av*0.5?' lo':'')):'';
+    var d=new Date(m.ts), tm=md(m.day)+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+    var num=function(k){ return m[k]==null?'<span style="color:#C4C8D2">—</span>':fmt(m[k]); };
+    h+='<tr class="r'+cls+'" data-act="ig-open" data-link="'+esc(m.link||'')+'"><td class="l">'+(m.thumb?'<img class="th" loading="lazy" src="'+esc(m.thumb)+'" onerror="this.removeAttribute(\'src\')">':'<span class="th"></span>')+'</td><td class="l">'+tm+'</td><td class="l"><span class="kd '+esc(m.kind)+'">'+(kinds[m.kind]||'')+'</span></td><td class="l"><div class="cap">'+esc(m.caption||'')+'</div></td><td>'+num('views')+'</td><td>'+num('reach')+'</td><td>'+num('inter')+'</td><td>'+num('likes')+'</td><td>'+num('comments')+'</td><td>'+num('shares')+'</td><td>'+num('saved')+'</td><td>'+num('replies')+'</td></tr>';
+  });
+  h+='</table></div></div>';
+  $('vIg').innerHTML=h;
+}
+function igExport(){
+  var r=igRange(), rows=igRows(r[0],r[1]), kinds={story:'限動',reel:'Reels',post:'貼文'};
+  var L=[['時間','類型','文字','瀏覽','觸及','互動','按讚','留言','分享','儲存','回覆','連結'].join('\t')];
+  rows.forEach(function(m){ var d=new Date(m.ts); L.push([m.day+' '+pad(d.getHours())+':'+pad(d.getMinutes()),kinds[m.kind]||'',String(m.caption||'').replace(/\s+/g,' '),m.views||0,m.reach||0,m.inter||0,m.likes==null?'':m.likes,m.comments==null?'':m.comments,m.shares||0,m.saved==null?'':m.saved,m.replies==null?'':m.replies,m.link||''].join('\t')); });
+  var txt=L.join('\n');
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast('已複製 '+rows.length+' 則，可貼到試算表'); }); else prompt('複製',txt);
 }
 
 /* ============ RENDER: KOL ============ */
@@ -998,6 +1117,12 @@ document.addEventListener('click', function(e){
   if(act==='account-create'){ var em=$('acEmail').value.trim(), pw=$('acPw').value; if(!em||pw.length<6){ toast('信箱或密碼不完整'); return; } if(!people.some(function(p){return p.email.toLowerCase()===em.toLowerCase();})){ toast('請先加入成員並儲存'); return; } var sec=firebase.apps.find(function(a){return a.name==='secondary';})||firebase.initializeApp(FB_CONFIG,'secondary'); sec.auth().createUserWithEmailAndPassword(em,pw).then(function(){ return sec.auth().signOut(); }).then(function(){ toast('帳號已建立'); $('acEmail').value=''; $('acPw').value=''; }).catch(function(err){ toast(err.code==='auth/email-already-in-use'?'此信箱已有帳號':'建立失敗：'+err.message); }); return; }
   if(act==='event-add'){ var d=$('evDate').value, ti=$('evTitle').value.trim(); if(!d||!ti) return; db.collection(COL.events).add({date:d,title:ti,kind:$('evKind').value,createdAt:Date.now()}); return; }
   if(act==='event-del'){ db.collection(COL.events).doc(id).delete(); return; }
+  if(act==='ig-period'){ igPeriod=el.dataset.p; renderIg(); return; }
+  if(act==='ig-type'){ igType=el.dataset.p; renderIg(); return; }
+  if(act==='ig-sort'){ var sk=el.dataset.k; if(igSort.k===sk) igSort.dir=-igSort.dir; else igSort={k:sk,dir:(sk==='kind'||sk==='caption')?1:-1}; renderIg(); return; }
+  if(act==='ig-open'){ if(el.dataset.link) window.open(el.dataset.link,'_blank','noopener'); return; }
+  if(act==='ig-refresh'){ if(isAdmin()) loadIg(true); return; }
+  if(act==='ig-export'){ if(isAdmin()) igExport(); return; }
   if(act==='links'){ $('lnkBox').classList.toggle('hide'); return; }
   if(act==='link-add'){ links.push({name:'',url:''}); renderSettings(); return; }
   if(act==='link-del'){ links.splice(+el.dataset.li,1); renderSettings(); return; }
@@ -1009,6 +1134,8 @@ document.addEventListener('click', function(e){
 });
 document.addEventListener('change', function(e){
   var el=e.target;
+  if(el.id==='igFrom'){ igFrom=el.value; renderIg(); return; }
+  if(el.id==='igTo'){ igTo=el.value; renderIg(); return; }
   if(el.dataset.ks){ var kid=el.closest('.kol').dataset.id; var u={}; u['steps.'+el.dataset.ks]=el.checked; db.collection(COL.kols).doc(kid).update(u); return; }
   if(el.dataset.kf){ var kid2=el.closest('.kol').dataset.id; var u2={}; u2[el.dataset.kf]=el.value.trim(); db.collection(COL.kols).doc(kid2).update(u2); return; }
   if(el.dataset.ef){ var u3={}; u3[el.dataset.ef]=el.value; db.collection(COL.events).doc(el.dataset.id).update(u3); return; }
@@ -1086,7 +1213,8 @@ function quickAdd(){
 function setView(v){
   view=v;
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on',t.dataset.view===v); });
-  ['desk','cal','plan','kol','settings'].forEach(function(k){ $('v'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('hide',k!==v); });
+  ['desk','cal','plan','kol','ig','settings'].forEach(function(k){ $('v'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('hide',k!==v); });
+  if(v==='ig' && (!ig.loaded || !ig.log || Date.now()-(ig.fetchedAt||0)>10*60000)){ ig.fetchedAt=Date.now(); loadIg(false); }
   renderAll();
 }
 function setMobile(mv){
@@ -1140,7 +1268,7 @@ auth.onAuthStateChanged(function(user){
     if(!m){ $('lgErr').textContent='此信箱尚未加入成員'; auth.signOut(); return; }
     me=Object.assign({uid:user.uid,email:user.email},m);
     $('login').classList.add('hide'); $('app').classList.remove('hide');
-    applyMe(); setView('desk'); listen();
+    applyMe(); setView('desk'); listen(); ig.fetchedAt=Date.now(); loadIg(false);
   });
 });
 window.addEventListener('resize', function(){ renderNotes(); });
