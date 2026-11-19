@@ -96,7 +96,12 @@ svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .dd .pg i{display:block;height:100%;background:var(--ink)}
 .dd .pt{font-size:10px;color:var(--tx3);margin-top:3px}
 .pcol{display:flex;flex-direction:column;gap:3px;min-width:0}
-.li{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:6px;padding:4px 8px;border-radius:7px;border:1px solid transparent;font-size:12px;min-width:0}
+.eb{border:none;background:none;padding:0 2px;color:var(--tx3);flex:none;line-height:1}
+.eb:hover{color:var(--tx)}
+.eb svg.i{width:12px;height:12px}
+.frm{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center;font-size:13px}
+.frm input,.frm select{padding:8px 10px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;width:100%}
+.li{display:grid;grid-template-columns:14px 1fr auto auto;align-items:center;gap:6px;padding:4px 8px;border-radius:7px;border:1px solid transparent;font-size:12px;min-width:0}
 .li .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .li input{width:14px;height:14px;margin:0;accent-color:var(--ink);cursor:pointer}
 .li.done{opacity:.38}.li.done .t{text-decoration:line-through}
@@ -380,6 +385,7 @@ var noteDraftColor = 'y', notesHidden = false;
 var mobileView = 'colToday';
 var dirty = {};            /* 排程頁未儲存文字  key = date|person */
 var renderPending = false;
+var allTasks = [];
 
 /* ============ UTIL ============ */
 function $(id){ return document.getElementById(id); }
@@ -498,12 +504,13 @@ function itemHTML(t, opts){
   if(opts.btns) h+=extraBtns(t);
   if(opts.showWho && !t.common) h+='<span class="who" style="color:'+personColor(t.who)+'">'+esc(t.who)+'</span>';
   if(opts.showDate) h+='<span class="q l">'+md(t.date)+'</span>';
+  h+='<button class="eb" data-act="edit" data-id="'+t.id+'" aria-label="編輯"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>';
   h+='</div>';
   return h;
 }
 function liHTML(t){
   var done=isDone(t), late=t.date<today()&&!done;
-  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+esc(t.text)+assistTag(t)+'</span>'+(t.leave?leaveTag(t):qTag(t))+'</label>';
+  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+esc(t.text)+assistTag(t)+'</span>'+((t.leave?leaveTag(t):qTag(t))||'<span></span>')+'<button class="eb" data-act="edit" data-id="'+t.id+'" aria-label="編輯"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>'+'</label>';
 }
 
 /* ============ RENDER ============ */
@@ -911,7 +918,7 @@ function openMeeting(period){
   if(und.length>20) h+='<div class="empty">+'+(und.length-20)+'</div>';
   if(und.length && isAdmin()) h+='<div style="margin-top:10px"><button class="btn" data-act="roll-undone" data-to="'+to+'">未完成移到今天</button></div>';
   h+='</div></div>';
-  $('modalBody').innerHTML=h; $('modal').classList.remove('hide');
+  $('modalBody').innerHTML=h; $('modalBody').style.width=''; $('modal').classList.remove('hide');
 }
 
 /* ============ AUTO ITEMS（共同項目、固定提醒） ============ */
@@ -921,7 +928,7 @@ function ensureAutoItems(){
   var td=today(), b=db.batch(), n=0;
   function ensure(id, date, text, extra){
     if(date<td) return;
-    if(tasks.some(function(t){return t.id===id;})) return;
+    if(allTasks.some(function(t){return t.id===id;})) return;
     b.set(db.collection(COL.tasks).doc(id), Object.assign({date:date,line:text,text:text,platform:'其他',who:'',assist:null,cat:2,count:null,time:'',done:0,doneFlag:false,order:-1,common:true,auto:true,createdAt:Date.now(),createdBy:'auto'},extra||{})); n++;
   }
   events.forEach(function(e){ if(e.kind==='launch'){ ensure('auto_ev_'+e.id, addDaysS(e.date,-1), '確認 '+md(e.date)+' 上架日限動：題目、負責人、發布時間', {eventId:e.id}); } });
@@ -960,6 +967,9 @@ document.addEventListener('click', function(e){
   if(act==='meet-next'){ openMeeting(cycleOf(addDaysS(el.dataset.from,14))); return; }
   if(act==='meet-copy'){ var txt=reportText(el.dataset.from,el.dataset.to); if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){toast('已複製');}); else { prompt('複製', txt); } return; }
   if(act==='modal-close'){ $('modal').classList.add('hide'); return; }
+  if(act==='edit'){ e.preventDefault(); openEdit(id); return; }
+  if(act==='edit-save'){ saveEdit(id); return; }
+  if(act==='edit-del'){ if(!confirm('刪除這項任務？')) return; var td0=tasks.find(function(x){return x.id===id;}); (td0&&td0.auto?db.collection(COL.tasks).doc(id).update({deleted:true}):db.collection(COL.tasks).doc(id).delete()).then(function(){ $('modal').classList.add('hide'); toast('已刪除'); }); return; }
   if(act==='roll-undone'){ var to=el.dataset.to; var und=tasks.filter(function(t){return t.date<=to && !t.common && !isDone(t);}); var b=db.batch(); und.forEach(function(t){ b.update(db.collection(COL.tasks).doc(t.id),{date:today(),rolledFrom:t.date}); }); b.commit().then(function(){ $('modal').classList.add('hide'); toast('已移到今天'); }); return; }
   /* notes */
   if(act==='note-new'){ $('nlist').classList.add('hide'); fillComposer(); $('cmp').classList.toggle('hide'); if(!$('cmp').classList.contains('hide')) $('cmpText').focus(); return; }
@@ -1011,6 +1021,34 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Enter' && e.target.id==='qaInput'){ e.preventDefault(); quickAdd(); }
 });
 $('modal').addEventListener('click', function(e){ if(e.target===$('modal')) $('modal').classList.add('hide'); });
+function openEdit(id){
+  var t=tasks.find(function(x){return x.id===id;}); if(!t) return;
+  var names=staffNames();
+  var h='<h2>編輯<span class="r"><button class="btn sm" data-act="modal-close">關閉</button></span></h2><div class="frm">';
+  h+='<span>內容</span><input id="edLine" value="'+esc(t.common?t.text:(t.line||t.text))+'">';
+  h+='<span>日期</span><input type="date" id="edDate" value="'+esc(t.date)+'">';
+  if(!t.common){
+    h+='<span>主責</span><select id="edWho">'+names.map(function(n){return '<option'+(n===t.who?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>';
+    h+='<span>協助</span><select id="edAssist"><option value="">無</option>'+names.map(function(n){return '<option'+(n===t.assist?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>';
+    h+='<span>類別</span><select id="edCat">'+CATS.map(function(c,i){return '<option value="'+(i+1)+'"'+((t.cat||5)===i+1?' selected':'')+'>'+(i+1)+' '+c+'</option>';}).join('')+'</select>';
+  }
+  h+='</div><div style="display:flex;gap:8px;margin-top:16px"><button class="btn dn" data-act="edit-del" data-id="'+id+'">刪除</button><button class="btn pr" style="margin-left:auto" data-act="edit-save" data-id="'+id+'">儲存</button></div>';
+  $('modalBody').innerHTML=h; $('modalBody').style.width='460px'; $('modal').classList.remove('hide');
+}
+function saveEdit(id){
+  var t=tasks.find(function(x){return x.id===id;}); if(!t) return;
+  var line=$('edLine').value.trim(), date=$('edDate').value; if(!line||!date){ toast('內容或日期不完整'); return; }
+  var u={date:date};
+  if(t.common){ u.text=line; u.line=line; }
+  else {
+    var who=$('edWho').value, as=$('edAssist').value, cat=+$('edCat').value;
+    var p=parseLine(line, who);
+    u.line=p.line; u.text=p.text; u.platform=p.platform; u.time=p.time; u.who=who; u.assist=(as&&as!==who)?as:null;
+    u.cat=(line!==(t.line||t.text) && cat===(t.cat||5))?p.cat:cat;
+    if((p.count||null)!==(t.count||null)){ u.count=p.count; u.done=Math.min(t.done||0,p.count||0); if(!p.count) u.doneFlag=isDone(t); }
+  }
+  db.collection(COL.tasks).doc(id).update(u).then(function(){ $('modal').classList.add('hide'); toast('已儲存'); });
+}
 function quickAdd(){
   var inp=$('qaInput'); if(!inp) return; var line=inp.value.trim(); if(!line) return;
   var ds=inp.dataset.date; var p=parseLine(line, isAdmin()?'':me.name);
@@ -1037,7 +1075,7 @@ function setMobile(mv){
 function listen(){
   unsub.forEach(function(u){u();}); unsub=[];
   var from=ymd(addDays(mondayOf(new Date()),-70));
-  unsub.push(db.collection(COL.tasks).where('date','>=',from).onSnapshot(function(s){ tasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); renderAll(); ensureAutoItems(); }));
+  unsub.push(db.collection(COL.tasks).where('date','>=',from).onSnapshot(function(s){ allTasks=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); tasks=allTasks.filter(function(t){return !t.deleted;}); renderAll(); ensureAutoItems(); }));
   unsub.push(db.collection(COL.notes).onSnapshot(function(s){ notes=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); renderAll(); if(!$('nlist').classList.contains('hide')) renderNoteList(); }));
   unsub.push(db.collection(COL.events).onSnapshot(function(s){ events=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); renderAll(); ensureAutoItems(); }));
   unsub.push(db.collection(COL.kols).onSnapshot(function(s){ kols=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); renderKol(); }));
