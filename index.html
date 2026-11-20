@@ -86,6 +86,12 @@ svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .pf{display:inline-block;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--ink);color:#fff;margin-right:5px;vertical-align:1px}
 .pf.FB{background:#1C5FBF}.pf.TH{background:#555B6B}.pf.其他{background:#8A90A0}.pf.官網{background:#B06A00}.pf.YT{background:#B02020}
 .lb{font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;background:#fff;color:var(--amber);margin-right:5px;vertical-align:1px}
+.stg{font-size:9px;font-weight:700;padding:0 5px;border-radius:4px;margin-left:4px;white-space:nowrap;background:#fff}
+.stg.doing{color:#B06A00}.stg.sched{color:#2F6FED}.stg.pub{color:#1F8A5B}
+.it{flex-wrap:wrap}
+.it .nt{flex-basis:100%;font-size:11px;color:var(--tx2);padding-left:23px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.li .nt{grid-column:2/5;font-size:10.5px;color:var(--tx2);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frm textarea{padding:8px 10px;border:1px solid var(--bd2);border-radius:8px;font-size:13px;width:100%;min-height:70px;resize:vertical}
 .as{font-size:9px;color:var(--tx2);background:rgba(255,255,255,.75);border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
 .q{font-size:10px;color:var(--tx2);background:#fff;border-radius:5px;padding:0 5px;flex:none;white-space:nowrap}
 .q.l{color:var(--red);font-weight:700}
@@ -523,24 +529,27 @@ function extraBtns(t){
   h+='<button class="xb v'+(t.vhelp?' on':'')+'" data-act="vhelp" data-id="'+t.id+'" title="請 V 支援">V'+(t.vhelp?' '+t.vhelp:'')+'</button>';
   return h;
 }
+var STATUS = [['','未開始'],['doing','製作中'],['sched','已排程'],['pub','已發布']];
+function stTag(t){ if(!t.status) return ''; var f=STATUS.find(function(x){return x[0]===t.status;}); return f?'<span class="stg '+t.status+'">'+f[1]+'</span>':''; }
 function itemHTML(t, opts){
   opts=opts||{};
   var done=isDone(t), late=t.date<today()&&!done;
   var h='<div class="it'+(done?' done':'')+(late&&opts.late?' late':'')+(t.common?' cm':'')+'" style="'+(t.common?'':whoStyle(t.who))+'" data-id="'+t.id+'" draggable="true">';
   h+='<input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'>';
-  h+=leaveTag(t)+'<span class="t">'+(t.common?'<span class="lb">共同</span>':pfTag(t.platform))+esc(t.text)+assistTag(t)+'</span>';
+  h+=leaveTag(t)+'<span class="t">'+(t.common?'<span class="lb">共同</span>':pfTag(t.platform))+esc(t.text)+assistTag(t)+stTag(t)+'</span>';
   if(t.count && opts.counter){ h+='<span class="cnt"><button data-act="dec" data-id="'+t.id+'" aria-label="減一">−</button><b>'+(t.done||0)+' / '+t.count+'</b><button data-act="inc" data-id="'+t.id+'" aria-label="加一">+</button></span>'; }
   else h+=qTag(t);
   if(opts.btns) h+=extraBtns(t);
   if(opts.showWho && !t.common) h+='<span class="who" style="color:'+personColor(t.who)+'">'+esc(t.who)+'</span>';
   if(opts.showDate) h+='<span class="q l">'+md(t.date)+'</span>';
   h+='<button class="eb" data-act="edit" data-id="'+t.id+'" aria-label="編輯"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>';
+  if(t.note) h+='<span class="nt">'+esc(t.note)+'</span>';
   h+='</div>';
   return h;
 }
 function liHTML(t){
   var done=isDone(t), late=t.date<today()&&!done;
-  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'" data-id="'+t.id+'" draggable="true"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+esc(t.text)+assistTag(t)+'</span>'+((t.leave?leaveTag(t):qTag(t))||'<span></span>')+'<button class="eb" data-act="edit" data-id="'+t.id+'" aria-label="編輯"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>'+'</label>';
+  return '<label class="li'+(done?' done':'')+(late?' late':'')+'" style="'+whoStyle(t.who)+'" data-id="'+t.id+'" draggable="true"><input type="checkbox" data-act="toggle" data-id="'+t.id+'"'+(done?' checked':'')+'><span class="t">'+pfTag(t.platform)+esc(t.text)+assistTag(t)+stTag(t)+'</span>'+((t.leave?leaveTag(t):qTag(t))||'<span></span>')+'<button class="eb" data-act="edit" data-id="'+t.id+'" aria-label="編輯"><svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg></button>'+(t.note?'<span class="nt">'+esc(t.note)+'</span>':'')+'</label>';
 }
 
 /* ============ RENDER ============ */
@@ -1082,7 +1091,7 @@ document.addEventListener('click', function(e){
   if(act==='cal-sel'){ if(e.target.closest('[data-act="toggle"]')) return; calSel=el.dataset.date; renderCal(); return; }
   if(act==='qa-add'){ quickAdd(); return; }
   if(act==='logout'){ auth.signOut(); return; }
-  if(act==='toggle'){ var t=tasks.find(function(x){return x.id===id;}); if(!t) return; var ck=el.checked; var upd=t.count?{done:ck?t.count:0}:{doneFlag:ck}; upd.doneAt=ck?Date.now():null; upd.doneBy=ck?me.name:null; db.collection(COL.tasks).doc(id).update(upd); return; }
+  if(act==='toggle'){ var t=tasks.find(function(x){return x.id===id;}); if(!t) return; var ck=el.checked; var upd=t.count?{done:ck?t.count:0}:{doneFlag:ck}; upd.doneAt=ck?Date.now():null; upd.doneBy=ck?me.name:null; if(!ck && t.status==='pub') upd.status=''; db.collection(COL.tasks).doc(id).update(upd); return; }
   if(act==='inc'||act==='dec'){ var t2=tasks.find(function(x){return x.id===id;}); if(!t2) return; var v=Math.max(0,Math.min(t2.count,(t2.done||0)+(act==='inc'?1:-1))); db.collection(COL.tasks).doc(id).update({done:v,doneAt:v>=t2.count?Date.now():null,doneBy:me.name}); return; }
   if(act==='vhelp'){ var t3=tasks.find(function(x){return x.id===id;}); if(!t3) return; db.collection(COL.tasks).doc(id).update({vhelp:(t3.vhelp||0)+1}); logEvent('vhelp',t3); toast('已通知 V'); return; }
   if(act==='plan-save'){ el.textContent='儲存中'; savePlan(el.dataset.date,el.dataset.who).then(function(){ toast('已儲存'); renderPlan(); }).catch(function(){ el.textContent='儲存'; }); return; }
@@ -1094,6 +1103,7 @@ document.addEventListener('click', function(e){
   if(act==='modal-close'){ $('modal').classList.add('hide'); return; }
   if(act==='edit'){ e.preventDefault(); openEdit(id); return; }
   if(act==='new'){ e.preventDefault(); openEdit(null,{date:el.dataset.date,who:el.dataset.who,line:'',text:'',cat:0}); return; }
+  if(act==='ed-status'){ var bx=$('edStatus'); bx.dataset.v=el.dataset.v; bx.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on',b===el); }); return; }
   if(act==='edit-save'){ saveEdit(id); return; }
   if(act==='edit-del'){ if(!confirm('刪除這項任務？')) return; var td0=tasks.find(function(x){return x.id===id;}); (td0&&td0.auto?db.collection(COL.tasks).doc(id).update({deleted:true}):db.collection(COL.tasks).doc(id).delete()).then(function(){ $('modal').classList.add('hide'); toast('已刪除'); }); return; }
   if(act==='roll-undone'){ var to=el.dataset.to; var und=tasks.filter(function(t){return t.date<=to && !t.common && !isDone(t);}); var b=db.batch(); und.forEach(function(t){ b.update(db.collection(COL.tasks).doc(t.id),{date:today(),rolledFrom:t.date}); }); b.commit().then(function(){ $('modal').classList.add('hide'); toast('已移到今天'); }); return; }
@@ -1166,19 +1176,22 @@ function openEdit(id, preset){
     h+='<span>協助</span><select id="edAssist"><option value="">無</option>'+names.map(function(n){return '<option'+(n===t.assist?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>';
     if(!preset) h+='<span>類別</span><select id="edCat">'+CATS.map(function(c,i){return '<option value="'+(i+1)+'"'+((t.cat||5)===i+1?' selected':'')+'>'+(i+1)+' '+c+'</option>';}).join('')+'</select>';
   }
+  if(!t.common) h+='<span>狀態</span><div class="seg" id="edStatus" data-v="'+esc(t.status||'')+'" style="justify-self:start">'+STATUS.map(function(x){return '<button type="button" class="'+((t.status||'')===x[0]?'on':'')+'" data-act="ed-status" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
+  h+='<span style="align-self:start;padding-top:8px">備註</span><textarea id="edNote" placeholder="預定排程時間、重點">'+esc(t.note||'')+'</textarea>';
   h+='</div><div style="display:flex;gap:8px;margin-top:16px">'+(preset?'':'<button class="btn dn" data-act="edit-del" data-id="'+id+'">刪除</button>')+'<button class="btn pr" style="margin-left:auto" data-act="edit-save" data-id="'+(preset?'':id)+'">儲存</button></div>';
   $('modalBody').innerHTML=h; $('modalBody').style.width='460px'; $('modal').classList.remove('hide');
   if(preset) setTimeout(function(){ $('edLine').focus(); },50);
 }
 function saveEdit(id){
   var line=$('edLine').value.trim(), date=$('edDate').value; if(!line||!date){ toast('內容或日期不完整'); return; }
+  var edSt=$('edStatus')?$('edStatus').dataset.v:'', edNt=$('edNote')?$('edNote').value.trim():'';
   if(!id){
     var w0=$('edWho').value, a0=$('edAssist').value, p0=parseLine(line,w0);
-    db.collection(COL.tasks).add({date:date,line:p0.line,text:p0.text,platform:p0.platform,who:w0,assist:(a0&&a0!==w0)?a0:null,cat:p0.cat,count:p0.count,time:p0.time,done:0,doneFlag:false,order:tasksOn(date).length,common:false,createdAt:Date.now(),createdBy:me.name}).then(function(){ $('modal').classList.add('hide'); toast('已新增'); });
+    db.collection(COL.tasks).add({date:date,line:p0.line,text:p0.text,platform:p0.platform,who:w0,assist:(a0&&a0!==w0)?a0:null,cat:p0.cat,count:p0.count,time:p0.time,order:tasksOn(date).length,common:false,status:edSt||'',note:edNt,doneFlag:edSt==='pub'&&!p0.count,done:(edSt==='pub'&&p0.count)?p0.count:0,createdAt:Date.now(),createdBy:me.name}).then(function(){ $('modal').classList.add('hide'); toast('已新增'); });
     return;
   }
   var t=tasks.find(function(x){return x.id===id;}); if(!t) return;
-  var u={date:date};
+  var u={date:date, note:edNt};
   if(t.common){ u.text=line; u.line=line; }
   else {
     var who=$('edWho').value, as=$('edAssist').value, cat=+$('edCat').value;
@@ -1186,6 +1199,11 @@ function saveEdit(id){
     u.line=p.line; u.text=p.text; u.platform=p.platform; u.time=p.time; u.who=who; u.assist=(as&&as!==who)?as:null;
     u.cat=(line!==(t.line||t.text) && cat===(t.cat||5))?p.cat:cat;
     if((p.count||null)!==(t.count||null)){ u.count=p.count; u.done=Math.min(t.done||0,p.count||0); if(!p.count) u.doneFlag=isDone(t); }
+    if(edSt!==(t.status||'')){
+      u.status=edSt; var cnt=('count' in u)?u.count:t.count;
+      if(edSt==='pub'){ if(cnt) u.done=cnt; else u.doneFlag=true; u.doneAt=Date.now(); u.doneBy=me.name; }
+      else if(t.status==='pub'){ if(cnt) u.done=0; else u.doneFlag=false; u.doneAt=null; u.doneBy=null; }
+    }
   }
   db.collection(COL.tasks).doc(id).update(u).then(function(){ $('modal').classList.add('hide'); toast('已儲存'); });
 }
